@@ -18,7 +18,6 @@ https://t.me/+XwsrHPxBW5M4ZWVl
 Get your membership from Esewa , Litewallet ,Upi ,TonCoin !!
 
 LiteWallet  : 0xf663870211c015c48929e11c4c6689fe1df76a8d  (BNB Smart Chain Bep20)
-Website     :
 
 DM @Aryanlamaa to buy from Nepal 🇳🇵"""
 
