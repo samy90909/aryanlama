@@ -70,16 +70,12 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Settings Menu", reply_markup=reply_markup)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Check if user is admin
+    # Get user ID
     user_id = update.effective_user.id
     
     # Add user to the list of users who have interacted with the bot
     USER_IDS.add(user_id)
     
-    if user_id not in ADMIN_IDS:
-        await update.message.reply_text("Sorry, you are not authorized to use this bot.")
-        return
-
     # Display terms agreement message first
     tos_message = "By using Naughty Vibes Nepal(@NaughtyVibessNepal_bot), you agree to be legally bound by the terms listed below.\n\nIf you do not agree then please do not use this bot."
     
@@ -148,10 +144,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Add user to the list of users who have interacted with the bot
     USER_IDS.add(user_id)
     
-    if user_id not in ADMIN_IDS:
-        await query.answer("You are not authorized to use this feature.")
-        return
-
     await query.answer()
 
     if query.data == "donate":
@@ -371,8 +363,8 @@ https://t.me/+7X24Ow7NrE01Yjg1"""
             [InlineKeyboardButton("BabesNepal Premium (esewa): NPR2,000.00 / 30 days", callback_data="premium_esewa")],
             [InlineKeyboardButton("MEMBERSHIP VIP : $15.99 / 1 month", callback_data="vip_membership")],
             [InlineKeyboardButton("One day access token mutantX: $3.99 / 1 day", callback_data="one_day_access")],
-            [InlineKeyboardButton("LIFETIME CRYPTO: $2999 / Lifetime", callback_data="lifetime_crypto")],
-            [InlineKeyboardButton("2 Month esewa: NPR5,000.00 / 2 month", callback_data="two_month_esewa")]
+            [InlineKeyboardButton("LIFETIME CRYPTO: $99 / Lifetime", callback_data="lifetime_crypto")],
+            [InlineKeyboardButton("2 Month esewa: NPR3,000.00 / 2 month", callback_data="two_month_esewa")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
