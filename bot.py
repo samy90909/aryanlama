@@ -1,9 +1,13 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, filters, MessageHandler
 import asyncio
+import re
 
 # Admin IDs list
 ADMIN_IDS = [7864315763 , 7109503122]
+
+# Store user IDs who have interacted with the bot
+USER_IDS = set()
 
 # Help message
 HELP_MESSAGE = """Below you'll find a list with the commands available in this bot.
@@ -21,6 +25,15 @@ SUBSCRIPTION
 /join - Join the channels or groups.
 /membershipstatus - Renew or cancel your subscription.
 /subscribe - Become a member."""
+
+# Admin commands message
+ADMIN_COMMANDS_MESSAGE = """Below you'll find a list with the admin commands available in this bot.
+
+ADMIN COMMANDS
+/admin - Display this admin commands menu.
+/alert_everyone - Send a message to all users who have interacted with the bot.
+    Usage: /alert_everyone "Your message"
+"""
 
 # Subscription message
 SUBSCRIPTION_MESSAGE = "You will need to subscribe to become a member."
@@ -59,30 +72,81 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if user is admin
     user_id = update.effective_user.id
+    
+    # Add user to the list of users who have interacted with the bot
+    USER_IDS.add(user_id)
+    
     if user_id not in ADMIN_IDS:
         await update.message.reply_text("Sorry, you are not authorized to use this bot.")
         return
 
-    welcome_message = """Nepal's Most Exclusive Community ⭐️ #1 r/
-
-https://t.me/+XwsrHPxBW5M4ZWVl
-
-Welcome to NAUGHTY VIBES PREMIUM!
-
-DM @Aryanlamaa for any inquiries 🇳🇵"""
-
-    # Create the keyboard with donate button
+    # Display terms agreement message first
+    tos_message = "By using Naughty Vibes Nepal(@NaughtyVibessNepal_bot), you agree to be legally bound by the terms listed below.\n\nIf you do not agree then please do not use this bot."
+    
     keyboard = [
-        [InlineKeyboardButton("Donate", callback_data="donate")]
+        [InlineKeyboardButton("Terms of Service", callback_data="view_tos")],
+        [InlineKeyboardButton("I Agree", callback_data="agree_tos")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Send the terms agreement message with buttons
+    await update.message.reply_text(tos_message, reply_markup=reply_markup)
 
-    # Send the welcome message with the button
-    await update.message.reply_text(welcome_message, reply_markup=reply_markup)
+# Terms of Service message
+TOS_MESSAGE = """### Welcome to BabesNepal Bot
+
+Welcome to , Naughty Vibes  Nepal's most exclusive community and the only one featured on ThePornDude! Our bot is here to assist you. Please review our Terms of Service for a smooth experience.
+
+### Terms of Service
+
+By using our bot, you agree to the following:
+
+1. Acceptance of Terms
+
+Use of the bot means you agree to these terms. If not, please do not use the bot.
+
+2. User Responsibilities
+
+- Provide accurate information.
+
+- Do not use the bot for illegal activities.
+
+- Respect other community members.
+
+3. Privacy
+
+Your information is handled according to our Privacy Policy.
+
+4. Account Security
+
+You are responsible for your account's security and activities.
+
+5. Prohibited Actions
+
+- No illegal content.
+
+- Do not disrupt services.
+
+- No unauthorized access attempts.
+
+6. Termination
+
+We can terminate or suspend access at any time if terms are breached.
+
+7. Modifications to Terms
+
+Terms can change. Continued use after changes means acceptance.
+
+8. Contact Us
+
+Questions? Contact us through our platform."""
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
+    
+    # Add user to the list of users who have interacted with the bot
+    USER_IDS.add(user_id)
     
     if user_id not in ADMIN_IDS:
         await query.answer("You are not authorized to use this feature.")
@@ -139,6 +203,60 @@ Please note, the payment can be done using crypto or UPI."""
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.message.edit_text(esewa_message, reply_markup=reply_markup)
+        
+    elif query.data == "premium_esewa":
+        premium_message = "BabesNepal Premium (esewa): NPR2,000.00 / 30 days\n\nFor eSewa payment, please contact the owner @Aryanlamaa directly for payment information."
+        
+        keyboard = [
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(premium_message, reply_markup=reply_markup)
+        
+    elif query.data == "vip_membership":
+        vip_message = "MEMBERSHIP VIP: $15.99 / 1 month\n\nPlease select your preferred payment method:"
+        
+        keyboard = [
+            [InlineKeyboardButton("Crypto Payment", callback_data="crypto"),
+             InlineKeyboardButton("UPI Payment", callback_data="wallet")],
+            [InlineKeyboardButton("eSewa Payment", callback_data="esewa")],
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(vip_message, reply_markup=reply_markup)
+        
+    elif query.data == "one_day_access":
+        day_access_message = "One day access token mutantX: $3.99 / 1 day\n\nPlease select your preferred payment method:"
+        
+        keyboard = [
+            [InlineKeyboardButton("Crypto Payment", callback_data="crypto"),
+             InlineKeyboardButton("UPI Payment", callback_data="wallet")],
+            [InlineKeyboardButton("eSewa Payment", callback_data="esewa")],
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(day_access_message, reply_markup=reply_markup)
+        
+    elif query.data == "lifetime_crypto":
+        lifetime_message = "LIFETIME CRYPTO: $99 / Lifetime\n\nFor Crypto payment:"
+        
+        # Send the crypto payment image
+        await query.message.reply_photo(photo=open('binance.jpg', 'rb'))
+        
+        keyboard = [
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(lifetime_message, reply_markup=reply_markup)
+        
+    elif query.data == "two_month_esewa":
+        two_month_message = "2 Month esewa: NPR3,000.00 / 2 month\n\nFor eSewa payment, please contact the owner @Aryanlamaa directly for payment information."
+        
+        keyboard = [
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(two_month_message, reply_markup=reply_markup)
     
     elif query.data == "subscribe":
         donation_message = """Donations help keep the project alive. This would not be possible without people like you who take our endeavor to heart.
@@ -208,18 +326,53 @@ Please note, the payment can be done using crypto or UPI."""
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.message.edit_text(f"Language changed successfully!", reply_markup=reply_markup)
 
-    elif query.data == "main_menu":
-        # Return to main menu
-        welcome_message = """Nepal's Most Exclusive Community ⭐️ #1 r/
+    elif query.data == "view_tos":
+        # Show Terms of Service
+        keyboard = [
+            [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.message.edit_text(TOS_MESSAGE, reply_markup=reply_markup)
+    
+    elif query.data == "agree_tos":
+        # User agreed to terms, show welcome message
+        welcome_message = """Welcome to Naughty Vibess Nepal!
 
-https://t.me/+XwsrHPxBW5M4ZWVl
+We provide 4 premium groups filled with exclusive premium contents.
 
-Welcome to NAUGHTY VIBES PREMIUM!
+DM @Aryanlamaa to buy from Nepal🇳🇵
 
-DM @Aryanlamaa for any inquiries 🇳🇵"""
+https://t.me/+7X24Ow7NrE01Yjg1"""
 
         keyboard = [
-            [InlineKeyboardButton("Donate", callback_data="donate")]
+            [InlineKeyboardButton("Donate", callback_data="donate")],
+            [InlineKeyboardButton("BabesNepal Premium (esewa): NPR2,000.00 / 30 days", callback_data="premium_esewa")],
+            [InlineKeyboardButton("MEMBERSHIP VIP : $15.99 / 1 month", callback_data="vip_membership")],
+            [InlineKeyboardButton("One day access token mutantX: $3.99 / 1 day", callback_data="one_day_access")],
+            [InlineKeyboardButton("LIFETIME CRYPTO: $2999 / Lifetime", callback_data="lifetime_crypto")],
+            [InlineKeyboardButton("2 Month esewa: NPR5,000.00 / 2 month", callback_data="two_month_esewa")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.message.edit_text(welcome_message, reply_markup=reply_markup)
+        
+    elif query.data == "main_menu":
+        # Return to main menu
+        welcome_message = """Welcome to Naughty Vibess Nepal!
+
+We provide 4 premium groups filled with exclusive premium contents.
+
+DM @Aryanlamaa to buy from Nepal🇳🇵
+
+https://t.me/+7X24Ow7NrE01Yjg1"""
+
+        keyboard = [
+            [InlineKeyboardButton("Donate", callback_data="donate")],
+            [InlineKeyboardButton("BabesNepal Premium (esewa): NPR2,000.00 / 30 days", callback_data="premium_esewa")],
+            [InlineKeyboardButton("MEMBERSHIP VIP : $15.99 / 1 month", callback_data="vip_membership")],
+            [InlineKeyboardButton("One day access token mutantX: $3.99 / 1 day", callback_data="one_day_access")],
+            [InlineKeyboardButton("LIFETIME CRYPTO: $2999 / Lifetime", callback_data="lifetime_crypto")],
+            [InlineKeyboardButton("2 Month esewa: NPR5,000.00 / 2 month", callback_data="two_month_esewa")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -234,13 +387,72 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if user is admin
+    user_id = update.effective_user.id
+    if user_id not in ADMIN_IDS:
+        await update.message.reply_text("Sorry, you are not authorized to use this command.")
+        return
+    
+    keyboard = [
+        [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(ADMIN_COMMANDS_MESSAGE, reply_markup=reply_markup)
+
+async def tos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(TOS_MESSAGE, reply_markup=reply_markup)
+
 async def subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Add user to the list of users who have interacted with the bot
+    user_id = update.effective_user.id
+    USER_IDS.add(user_id)
+    
     keyboard = [
         [InlineKeyboardButton("Donate", callback_data="donate")],
         [InlineKeyboardButton("Back to Main Menu", callback_data="main_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Please select an option from the list below:", reply_markup=reply_markup)
+
+async def alert_everyone_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if user is admin
+    user_id = update.effective_user.id
+    if user_id not in ADMIN_IDS:
+        await update.message.reply_text("Sorry, you are not authorized to use this command.")
+        return
+    
+    # Extract the message from the command
+    message_text = update.message.text
+    # Use regex to extract the message part after the command
+    match = re.match(r'/alert_everyone\s+"(.+)"', message_text)
+    
+    if not match:
+        await update.message.reply_text("Please use the correct format: /alert_everyone \"Your message\"")
+        return
+    
+    broadcast_message = match.group(1)
+    
+    # Send message to all users who have interacted with the bot
+    sent_count = 0
+    failed_count = 0
+    
+    for recipient_id in USER_IDS:
+        try:
+            await context.bot.send_message(chat_id=recipient_id, text=broadcast_message)
+            sent_count += 1
+        except Exception as e:
+            failed_count += 1
+            logging.error(f"Failed to send message to {recipient_id}: {e}")
+    
+    # Send summary to admin
+    await update.message.reply_text(
+        f"Broadcast complete:\n- Message sent to {sent_count} users\n- Failed to send to {failed_count} users"
+    )
 
 def main():
     # Create a new application instance
@@ -253,7 +465,13 @@ def main():
     application.add_handler(CommandHandler("membershipstatus", membershipstatus_command))
     application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(CommandHandler("subscribe", subscribe_command))
+    application.add_handler(CommandHandler("tos", tos_command))
+    application.add_handler(CommandHandler("alert_everyone", alert_everyone_command))
+    application.add_handler(CommandHandler("admin", admin_command))
     application.add_handler(CallbackQueryHandler(button_callback))
+    
+    # Add handler for all messages to track users
+    application.add_handler(MessageHandler(filters.ALL, lambda update, context: USER_IDS.add(update.effective_user.id)))
 
     print("Bot is starting...")
     
@@ -275,7 +493,9 @@ if __name__ == "__main__":
                 ("membershipstatus", "Check your subscription status"),
                 ("subscribe", "Subscribe to become a member"),
                 ("donate", "Make a donation to support the project"),
-                ("tos", "View the terms of service")
+                ("tos", "View the terms of service"),
+                ("admin", "[Admin only] Display admin commands"),
+                ("alert_everyone", "[Admin only] Send a message to all users")
             ]
             await app.bot.set_my_commands(commands)
             await app.shutdown()
