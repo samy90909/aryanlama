@@ -1,0 +1,8 @@
+/start - Get started with the bot and see the welcome message
+/help - Display the help menu with available commands
+/settings - Access bot settings and configuration options
+/join - Join channels or groups
+/membershipstatus - Check your subscription status
+/subscribe - Subscribe to become a member
+/donate - Make a donation to support the project
+/tos - View the terms of service
