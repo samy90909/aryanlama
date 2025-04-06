@@ -32,7 +32,17 @@ ADMIN_COMMANDS_MESSAGE = """Below you'll find a list with the admin commands ava
 ADMIN COMMANDS
 /admin - Display this admin commands menu.
 /alert_everyone - Send a message to all users who have interacted with the bot.
-    Usage: /alert_everyone "Your message"
+
+HOW TO USE ALERT_EVERYONE:
+1. For text messages: /alert_everyone "Your message"
+   Example: /alert_everyone "Hello everyone! New content available!"
+
+2. For video messages: 
+   - First, send a video to the bot
+   - Then reply to that video with: /alert_everyone [optional caption]
+   - The video and caption will be sent to all users
+
+Note: The command will show you statistics of how many messages were successfully delivered.
 """
 
 # Subscription message
@@ -418,33 +428,60 @@ async def alert_everyone_command(update: Update, context: ContextTypes.DEFAULT_T
         await update.message.reply_text("Sorry, you are not authorized to use this command.")
         return
     
-    # Extract the message from the command
-    message_text = update.message.text
-    # Use regex to extract the message part after the command
-    match = re.match(r'/alert_everyone\s+"(.+)"', message_text)
-    
-    if not match:
-        await update.message.reply_text("Please use the correct format: /alert_everyone \"Your message\"")
-        return
-    
-    broadcast_message = match.group(1)
-    
-    # Send message to all users who have interacted with the bot
-    sent_count = 0
-    failed_count = 0
-    
-    for recipient_id in USER_IDS:
-        try:
-            await context.bot.send_message(chat_id=recipient_id, text=broadcast_message)
-            sent_count += 1
-        except Exception as e:
-            failed_count += 1
-            logging.error(f"Failed to send message to {recipient_id}: {e}")
-    
-    # Send summary to admin
-    await update.message.reply_text(
-        f"Broadcast complete:\n- Message sent to {sent_count} users\n- Failed to send to {failed_count} users"
-    )
+    # Check if there's a video attached to the message
+    if update.message.reply_to_message and update.message.reply_to_message.video:
+        # User is replying to a video message
+        video_file_id = update.message.reply_to_message.video.file_id
+        caption = update.message.text.replace("/alert_everyone", "").strip()
+        
+        # Send video to all users who have interacted with the bot
+        sent_count = 0
+        failed_count = 0
+        
+        for recipient_id in USER_IDS:
+            try:
+                await context.bot.send_video(chat_id=recipient_id, video=video_file_id, caption=caption)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                logging.error(f"Failed to send video to {recipient_id}: {e}")
+        
+        # Send summary to admin
+        await update.message.reply_text(
+            f"Video broadcast complete:\n- Video sent to {sent_count} users\n- Failed to send to {failed_count} users"
+        )
+    else:
+        # Extract the message from the command for text-only messages
+        message_text = update.message.text
+        # Use regex to extract the message part after the command
+        match = re.match(r'/alert_everyone\s+"(.+)"', message_text)
+        
+        if not match:
+            await update.message.reply_text(
+                "Please use one of these formats:\n" +
+                "1. For text messages: /alert_everyone \"Your message\"\n" +
+                "2. For video messages: Reply to a video with /alert_everyone [optional caption]"
+            )
+            return
+        
+        broadcast_message = match.group(1)
+        
+        # Send text message to all users who have interacted with the bot
+        sent_count = 0
+        failed_count = 0
+        
+        for recipient_id in USER_IDS:
+            try:
+                await context.bot.send_message(chat_id=recipient_id, text=broadcast_message)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                logging.error(f"Failed to send message to {recipient_id}: {e}")
+        
+        # Send summary to admin
+        await update.message.reply_text(
+            f"Text broadcast complete:\n- Message sent to {sent_count} users\n- Failed to send to {failed_count} users"
+        )
 
 def main():
     # Create a new application instance
