@@ -351,7 +351,7 @@ https://t.me/+7X24Ow7NrE01Yjg1"""
             [InlineKeyboardButton("BabesNepal Premium (esewa): NPR2,000.00 / 30 days", callback_data="premium_esewa")],
             [InlineKeyboardButton("MEMBERSHIP VIP : $15.99 / 1 month", callback_data="vip_membership")],
             [InlineKeyboardButton("One day access token mutantX: $3.99 / 1 day", callback_data="one_day_access")],
-            [InlineKeyboardButton("LIFETIME CRYPTO: $2999 / Lifetime", callback_data="lifetime_crypto")],
+            [InlineKeyboardButton("LIFETIME CRYPTO: $99 / Lifetime", callback_data="lifetime_crypto")],
             [InlineKeyboardButton("2 Month esewa: NPR5,000.00 / 2 month", callback_data="two_month_esewa")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
